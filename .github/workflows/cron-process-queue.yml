@@ -1,0 +1,18 @@
+name: Process Campaign Queue
+
+on:
+  schedule:
+    - cron: '*/15 * * * *' # Every 15 minutes
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  process-queue:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call process-queue endpoint
+        run: |
+          curl -s -X POST \
+            "${{ secrets.CAMPAIGN_URL }}/api/cron/process-queue" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            -H "Content-Type: application/json" \
+            --max-time 120
