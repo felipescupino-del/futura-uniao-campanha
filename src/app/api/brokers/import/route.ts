@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
   const issues: string[] = [];
 
   for (const row of data) {
-    const raw = row as Record<string, string>;
+    const raw = row as unknown as Record<string, string>;
     const phone = (raw.telefone || raw.phone || raw.cel || raw.celular)?.replace(/\D/g, '');
     const name = (raw.nome || raw.corretora || raw.name || raw.empresa)?.trim();
 
