@@ -30,6 +30,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   session: { strategy: 'jwt' },
   pages: { signIn: '/login' },
   secret: process.env.NEXTAUTH_SECRET,
+  trustHost: true,
   callbacks: {
     authorized({ auth, request }) {
       const isLoggedIn = !!auth?.user;
