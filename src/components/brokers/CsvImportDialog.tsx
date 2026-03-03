@@ -50,7 +50,7 @@ export function CsvImportDialog({ onImported }: { onImported: () => void }) {
         </DialogHeader>
         <div className="space-y-4">
           <p className="text-sm text-muted-foreground">
-            O CSV deve ter as colunas: <strong>nome</strong>, <strong>telefone</strong>, e opcionalmente <strong>cnpj</strong>, <strong>email</strong>.
+            O CSV deve ter as colunas: <strong>nome</strong> (ou corretora), <strong>telefone</strong>, e opcionalmente <strong>cnpj</strong>, <strong>email</strong>.
           </p>
           <input
             ref={fileRef}

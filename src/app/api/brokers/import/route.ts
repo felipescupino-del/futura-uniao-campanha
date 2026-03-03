@@ -30,8 +30,9 @@ export async function POST(req: NextRequest) {
   const issues: string[] = [];
 
   for (const row of data) {
-    const phone = row.telefone?.replace(/\D/g, '');
-    const name = row.nome?.trim();
+    const raw = row as Record<string, string>;
+    const phone = (raw.telefone || raw.phone || raw.cel || raw.celular)?.replace(/\D/g, '');
+    const name = (raw.nome || raw.corretora || raw.name || raw.empresa)?.trim();
 
     if (!phone || !name) {
       skipped++;
