@@ -1,7 +1,6 @@
 import type { Metadata } from 'next';
 import { Geist } from 'next/font/google';
 import './globals.css';
-import { SessionProvider } from 'next-auth/react';
 import { Toaster } from '@/components/ui/sonner';
 
 const geist = Geist({ subsets: ['latin'] });
@@ -19,10 +18,8 @@ export default function RootLayout({
   return (
     <html lang="pt-BR">
       <body className={`${geist.className} antialiased`}>
-        <SessionProvider>
-          {children}
-          <Toaster richColors position="top-right" />
-        </SessionProvider>
+        {children}
+        <Toaster richColors position="top-right" />
       </body>
     </html>
   );

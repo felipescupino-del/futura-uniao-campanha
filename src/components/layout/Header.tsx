@@ -1,17 +1,14 @@
 'use client';
 
-import { signOut, useSession } from 'next-auth/react';
 import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { LogOut, Menu, ChevronRight } from 'lucide-react';
+import { Menu, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 
 const breadcrumbLabels: Record<string, string> = {
@@ -22,7 +19,6 @@ const breadcrumbLabels: Record<string, string> = {
 };
 
 export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
-  const { data: session } = useSession();
   const pathname = usePathname();
 
   const segments = pathname.split('/').filter(Boolean);
@@ -31,15 +27,6 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
     href: '/' + segments.slice(0, i + 1).join('/'),
     isLast: i === segments.length - 1,
   }));
-
-  const initials = session?.user?.name
-    ? session.user.name
-        .split(' ')
-        .map((w) => w[0])
-        .join('')
-        .slice(0, 2)
-        .toUpperCase()
-    : '??';
 
   return (
     <header className="flex h-14 items-center justify-between border-b bg-card px-4 md:px-6">
@@ -68,21 +55,16 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" className="gap-2 px-2">
             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">
-              {initials}
+              AD
             </div>
-            <span className="hidden text-sm sm:inline">{session?.user?.name}</span>
+            <span className="hidden text-sm sm:inline">Admin</span>
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-48">
           <DropdownMenuLabel className="font-normal">
-            <p className="text-sm font-medium">{session?.user?.name}</p>
-            <p className="text-xs text-muted-foreground">{session?.user?.email}</p>
+            <p className="text-sm font-medium">Admin</p>
+            <p className="text-xs text-muted-foreground">Grupo Futura União</p>
           </DropdownMenuLabel>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={() => signOut()}>
-            <LogOut className="mr-2 h-4 w-4" />
-            Sair
-          </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
     </header>
