@@ -1,0 +1,51 @@
+import OpenAI from 'openai';
+
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
+interface MessageContext {
+  brokerName: string;
+  stepNumber: number;
+  totalSteps: number;
+  basePrompt: string;
+  promptOverride?: string | null;
+  previousMessages?: string[];
+}
+
+export async function generateCampaignMessage(ctx: MessageContext): Promise<string> {
+  const systemPrompt = `Você é um assistente de reativação de corretores de seguros para o Grupo Futura União.
+Seu objetivo é gerar mensagens WhatsApp curtas, pessoais e profissionais para reativar corretores inativos.
+
+Regras:
+- Mensagem curta (máx 3 parágrafos)
+- Tom amigável e profissional
+- Use o nome do corretor
+- Cada etapa deve ter abordagem diferente:
+  - Etapa 1: Apresentação e reaproximação
+  - Etapa 2: Destaque benefícios e novidades
+  - Etapa 3: Case de sucesso ou depoimento
+  - Etapa 4: Oferta ou incentivo especial
+  - Etapa 5: Último contato, urgência leve
+- NÃO use markdown, emojis excessivos, ou formatação complexa
+- A mensagem deve parecer escrita por uma pessoa real`;
+
+  const userPrompt = `${ctx.promptOverride || ctx.basePrompt}
+
+Dados:
+- Nome do corretor: ${ctx.brokerName}
+- Etapa: ${ctx.stepNumber} de ${ctx.totalSteps}
+${ctx.previousMessages?.length ? `\nMensagens anteriores enviadas:\n${ctx.previousMessages.join('\n---\n')}` : ''}
+
+Gere a mensagem da etapa ${ctx.stepNumber}:`;
+
+  const response = await openai.chat.completions.create({
+    model: 'gpt-4o-mini',
+    messages: [
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: userPrompt },
+    ],
+    temperature: 0.8,
+    max_tokens: 500,
+  });
+
+  return response.choices[0].message.content?.trim() || '';
+}

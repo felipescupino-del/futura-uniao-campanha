@@ -1,0 +1,104 @@
+// prisma/schema.prisma
+// Model names: English (PascalCase)
+// Table/column names: Portuguese (snake_case) via @@map / @map
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─── AdminUser ────────────────────────────────────────────────────────────
+model AdminUser {
+  id           Int      @id @default(autoincrement())
+  email        String   @unique @map("email")
+  passwordHash String   @map("senha_hash")
+  name         String   @map("nome")
+  createdAt    DateTime @default(now()) @map("criado_em")
+
+  @@map("admin_usuarios")
+}
+
+// ─── Broker ───────────────────────────────────────────────────────────────
+model Broker {
+  id         Int      @id @default(autoincrement())
+  name       String   @map("nome")
+  cnpj       String?  @unique @map("cnpj")
+  email      String?  @map("email")
+  phone      String   @unique @map("telefone")
+  status     String   @default("inactive") @map("status") // inactive | recovered | unresponsive
+  importedAt DateTime @default(now()) @map("importado_em")
+  updatedAt  DateTime @updatedAt @map("atualizado_em")
+
+  campaigns CampaignBroker[]
+
+  @@map("corretores_inativos")
+}
+
+// ─── Campaign ─────────────────────────────────────────────────────────────
+model Campaign {
+  id          Int      @id @default(autoincrement())
+  name        String   @map("nome")
+  description String?  @map("descricao")
+  status      String   @default("draft") @map("status") // draft | active | paused | completed
+  totalSteps  Int      @default(5) @map("total_etapas")
+  basePrompt  String   @map("prompt_base") @db.Text
+  createdAt   DateTime @default(now()) @map("criado_em")
+  updatedAt   DateTime @updatedAt @map("atualizado_em")
+
+  steps   CampaignStep[]
+  brokers CampaignBroker[]
+
+  @@map("campanhas_reativacao")
+}
+
+// ─── CampaignStep ─────────────────────────────────────────────────────────
+model CampaignStep {
+  id             Int      @id @default(autoincrement())
+  campaignId     Int      @map("campanha_id")
+  stepNumber     Int      @map("numero_etapa") // 1-5
+  delayDays      Int      @map("dias_espera")
+  promptOverride String?  @map("prompt_override") @db.Text
+
+  campaign Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  @@unique([campaignId, stepNumber])
+  @@map("etapas_campanha")
+}
+
+// ─── CampaignBroker ───────────────────────────────────────────────────────
+model CampaignBroker {
+  id            Int       @id @default(autoincrement())
+  campaignId    Int       @map("campanha_id")
+  brokerId      Int       @map("corretor_id")
+  currentStep   Int       @default(0) @map("etapa_atual") // 0 = not yet contacted
+  status        String    @default("pending") @map("status") // pending | in_progress | responded | completed | unresponsive
+  lastMessageAt DateTime? @map("ultima_mensagem_em")
+  nextMessageAt DateTime? @map("proxima_mensagem_em")
+  respondedAt   DateTime? @map("respondeu_em")
+
+  campaign Campaign     @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  broker   Broker       @relation(fields: [brokerId], references: [id], onDelete: Cascade)
+  messages MessageLog[]
+
+  @@unique([campaignId, brokerId])
+  @@index([nextMessageAt, status])
+  @@map("campanha_corretor")
+}
+
+// ─── MessageLog ───────────────────────────────────────────────────────────
+model MessageLog {
+  id               Int      @id @default(autoincrement())
+  campaignBrokerId Int      @map("campanha_corretor_id")
+  stepNumber       Int      @map("numero_etapa")
+  content          String   @map("conteudo") @db.Text
+  sentAt           DateTime @default(now()) @map("enviado_em")
+  status           String   @default("sent") @map("status") // sent | delivered | read | failed
+
+  campaignBroker CampaignBroker @relation(fields: [campaignBrokerId], references: [id], onDelete: Cascade)
+
+  @@map("log_mensagens_campanha")
+}
