@@ -16,8 +16,7 @@ interface MessageContext {
 }
 
 export async function generateCampaignMessage(ctx: MessageContext): Promise<string> {
-  const systemPrompt = `Você é um assistente de reativação de corretores de seguros para o Grupo Futura União.
-Seu objetivo é gerar mensagens WhatsApp curtas, pessoais e profissionais para reativar corretores inativos.
+  const systemPrompt = `${ctx.basePrompt}
 
 Regras:
 - Mensagem curta (máx 3 parágrafos)
@@ -30,6 +29,7 @@ Regras:
   - Etapa 4: Oferta ou incentivo especial
   - Etapa 5: Último contato, urgência leve
 - NÃO use markdown, emojis excessivos, ou formatação complexa
+- NÃO use placeholders como [Seu Nome] — escreva a mensagem pronta para enviar
 - A mensagem deve parecer escrita por uma pessoa real`;
 
   const userPrompt = `${ctx.promptOverride || ctx.basePrompt}

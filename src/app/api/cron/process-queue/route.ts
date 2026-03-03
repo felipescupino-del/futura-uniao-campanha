@@ -57,15 +57,23 @@ export async function POST(req: NextRequest) {
     }
 
     try {
-      // Generate personalized message
-      const message = await generateCampaignMessage({
-        brokerName: entry.broker.name,
-        stepNumber: nextStep,
-        totalSteps: entry.campaign.totalSteps,
-        basePrompt: entry.campaign.basePrompt,
-        promptOverride: step.promptOverride,
-        previousMessages: entry.messages.map((m) => m.content),
-      });
+      // If step has a fixed message (promptOverride), send it directly.
+      // Only use AI generation when there's no override.
+      let message: string;
+      if (step.promptOverride) {
+        message = step.promptOverride
+          .replace(/\{nome\}/gi, entry.broker.name)
+          .replace(/\{telefone\}/gi, entry.broker.phone);
+      } else {
+        message = await generateCampaignMessage({
+          brokerName: entry.broker.name,
+          stepNumber: nextStep,
+          totalSteps: entry.campaign.totalSteps,
+          basePrompt: entry.campaign.basePrompt,
+          promptOverride: null,
+          previousMessages: entry.messages.map((m) => m.content),
+        });
+      }
 
       // Send via Z-API
       await sendWhatsAppMessage(entry.broker.phone, message);
