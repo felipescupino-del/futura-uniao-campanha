@@ -87,9 +87,12 @@ export async function POST(req: NextRequest) {
         });
       }
 
+      // Only send image on the first step
+      const imageUrl = nextStep === 1 ? entry.campaign.imageUrl : null;
+
       // Send via WhatsApp
       if (shouldWhatsApp) {
-        await sendWhatsAppMessage(entry.broker.phone, message);
+        await sendWhatsAppMessage(entry.broker.phone, message, imageUrl);
         await prisma.messageLog.create({
           data: {
             campaignBrokerId: entry.id,
@@ -108,6 +111,7 @@ export async function POST(req: NextRequest) {
           to: entry.broker.email!,
           subject,
           text: message,
+          imageUrl,
         });
         await prisma.messageLog.create({
           data: {

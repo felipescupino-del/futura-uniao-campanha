@@ -47,6 +47,8 @@ export default function NewCampaignPage() {
   const [loading, setLoading] = useState(false);
   const [lists, setLists] = useState<BrokerListSummary[]>([]);
   const [selectedListId, setSelectedListId] = useState<string>('');
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
 
   useEffect(() => {
     fetch('/api/lists')
@@ -58,24 +60,35 @@ export default function NewCampaignPage() {
     setSteps((prev) => prev.map((s, i) => (i === idx ? { ...s, [field]: value } : s)));
   }
 
+  function handleImageSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (file && file.type.startsWith('image/')) {
+      setImageFile(file);
+      const reader = new FileReader();
+      reader.onload = (ev) => setImagePreview(ev.target?.result as string);
+      reader.readAsDataURL(file);
+    }
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
 
+    const formData = new FormData();
+    formData.append('name', name);
+    formData.append('description', description || '');
+    formData.append('basePrompt', basePrompt);
+    formData.append('channel', channel);
+    formData.append('steps', JSON.stringify(steps.map((s) => ({
+      stepNumber: s.stepNumber,
+      delayDays: s.delayDays,
+      promptOverride: s.promptOverride || null,
+    }))));
+    if (imageFile) formData.append('image', imageFile);
+
     const res = await fetch('/api/campaigns', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        name,
-        description: description || null,
-        basePrompt,
-        channel,
-        steps: steps.map((s) => ({
-          stepNumber: s.stepNumber,
-          delayDays: s.delayDays,
-          promptOverride: s.promptOverride || null,
-        })),
-      }),
+      body: formData,
     });
 
     if (res.ok) {
@@ -166,6 +179,38 @@ export default function NewCampaignPage() {
                 </p>
               </div>
             )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Imagem (opcional)</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="image">Imagem para enviar na 1a etapa (WhatsApp + Email)</Label>
+              <input
+                id="image"
+                type="file"
+                accept="image/*"
+                onChange={handleImageSelect}
+                className="block w-full text-sm file:mr-4 file:rounded file:border-0 file:bg-gray-100 file:px-4 file:py-2 file:text-sm"
+              />
+              {imagePreview && (
+                <div className="relative">
+                  <img src={imagePreview} alt="Preview" className="max-h-48 rounded border" />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="absolute top-1 right-1 text-destructive"
+                    onClick={() => { setImageFile(null); setImagePreview(null); }}
+                  >
+                    Remover
+                  </Button>
+                </div>
+              )}
+            </div>
           </CardContent>
         </Card>
 

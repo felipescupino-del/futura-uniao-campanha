@@ -11,7 +11,7 @@ function getResend(): Resend {
   return resendClient;
 }
 
-function textToHtml(text: string): string {
+function textToHtml(text: string, imageUrl?: string | null): string {
   const escaped = text
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
@@ -27,11 +27,16 @@ function textToHtml(text: string): string {
     .map((p) => `<p style="margin:0 0 16px">${p.replace(/\n/g, '<br>')}</p>`)
     .join('');
 
+  const imageBlock = imageUrl
+    ? `<div style="margin:0 0 24px"><img src="${imageUrl}" alt="Campanha" style="max-width:100%;border-radius:8px" /></div>`
+    : '';
+
   return `
 <!DOCTYPE html>
 <html>
 <head><meta charset="utf-8"></head>
 <body style="font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.6;color:#1a1a1a;max-width:600px;margin:0 auto;padding:24px">
+  ${imageBlock}
   ${paragraphs}
   <hr style="border:none;border-top:1px solid #e5e5e5;margin:32px 0 16px">
   <p style="font-size:12px;color:#888;margin:0">Grupo Futura União — Assessoria de Seguros</p>
@@ -43,10 +48,12 @@ export async function sendCampaignEmail({
   to,
   subject,
   text,
+  imageUrl,
 }: {
   to: string;
   subject: string;
   text: string;
+  imageUrl?: string | null;
 }): Promise<{ success: boolean; error?: string }> {
   const fromEmail = process.env.RESEND_FROM_EMAIL || 'contato@grupofuturauniao.com.br';
 
@@ -56,7 +63,7 @@ export async function sendCampaignEmail({
       from: `Grupo Futura União <${fromEmail}>`,
       to,
       subject,
-      html: textToHtml(text),
+      html: textToHtml(text, imageUrl),
       text,
     });
 
