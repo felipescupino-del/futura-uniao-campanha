@@ -11,7 +11,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Users } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
+import { Users, Trash2 } from 'lucide-react';
 
 interface BrokerListSummary {
   id: number;
@@ -81,6 +83,24 @@ export default function BrokersPage() {
               ))}
             </SelectContent>
           </Select>
+          {selectedListId !== 'all' && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-destructive hover:text-destructive"
+              onClick={async () => {
+                const listName = lists.find((l) => String(l.id) === selectedListId)?.name;
+                if (!confirm(`Excluir a lista "${listName}"? Os corretores não serão removidos.`)) return;
+                await fetch(`/api/lists/${selectedListId}`, { method: 'DELETE' });
+                toast.success(`Lista "${listName}" excluída`);
+                setSelectedListId('all');
+                loadLists();
+                loadBrokers();
+              }}
+            >
+              <Trash2 className="size-4" />
+            </Button>
+          )}
         </div>
       )}
 
