@@ -1,5 +1,7 @@
 import type { Metadata } from 'next';
 import { Geist } from 'next/font/google';
+import { ClerkProvider } from '@clerk/nextjs';
+import { ptBR } from '@clerk/localizations';
 import './globals.css';
 import { Toaster } from '@/components/ui/sonner';
 
@@ -16,11 +18,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="pt-BR">
-      <body className={`${geist.className} antialiased`}>
-        {children}
-        <Toaster richColors position="top-right" />
-      </body>
-    </html>
+    <ClerkProvider localization={ptBR}>
+      <html lang="pt-BR">
+        <body className={`${geist.className} antialiased`}>
+          {children}
+          <Toaster richColors position="top-right" />
+        </body>
+      </html>
+    </ClerkProvider>
   );
 }

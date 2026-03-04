@@ -11,11 +11,16 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
 
   return (
     <div className="flex h-screen bg-background">
       {/* Desktop sidebar */}
-      <Sidebar className="hidden md:flex" />
+      <Sidebar
+        className="hidden md:flex"
+        collapsed={collapsed}
+        onToggle={() => setCollapsed((c) => !c)}
+      />
 
       {/* Mobile sidebar via Sheet */}
       <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>

@@ -1,13 +1,8 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
+import { UserButton } from '@clerk/nextjs';
 import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuLabel,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { Menu, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 
@@ -51,22 +46,14 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
           ))}
         </nav>
       </div>
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="ghost" className="gap-2 px-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">
-              AD
-            </div>
-            <span className="hidden text-sm sm:inline">Admin</span>
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-48">
-          <DropdownMenuLabel className="font-normal">
-            <p className="text-sm font-medium">Admin</p>
-            <p className="text-xs text-muted-foreground">Grupo Futura União</p>
-          </DropdownMenuLabel>
-        </DropdownMenuContent>
-      </DropdownMenu>
+      <UserButton
+        showName
+        appearance={{
+          elements: {
+            avatarBox: 'h-8 w-8',
+          },
+        }}
+      />
     </header>
   );
 }
