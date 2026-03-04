@@ -26,9 +26,12 @@ export function BrokerMessageHistory({ messages, onRetry }: BrokerMessageHistory
         const config = statusConfig[msg.status] || statusConfig.sent;
         return (
           <div key={msg.id} className="flex justify-end">
-            <div className="max-w-[85%] rounded-lg rounded-tr-sm bg-emerald-50 px-3 py-2 shadow-sm">
+            <div className={`max-w-[85%] rounded-lg rounded-tr-sm px-3 py-2 shadow-sm ${msg.channel === 'email' ? 'bg-blue-50' : 'bg-emerald-50'}`}>
               <p className="whitespace-pre-wrap text-sm">{msg.content}</p>
               <div className="mt-1.5 flex items-center justify-end gap-2">
+                <Badge variant="outline" className="h-4 px-1.5 text-[10px]">
+                  {msg.channel === 'email' ? 'E-mail' : 'WhatsApp'}
+                </Badge>
                 <span className="text-[11px] text-muted-foreground">Etapa {msg.stepNumber}</span>
                 <span className="text-[11px] text-muted-foreground">
                   {new Date(msg.sentAt).toLocaleString('pt-BR', {

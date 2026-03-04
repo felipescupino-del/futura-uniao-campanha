@@ -8,6 +8,14 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import type { CampaignChannel } from '@/lib/types';
 
 interface StepConfig {
   stepNumber: number;
@@ -29,6 +37,7 @@ export default function NewCampaignPage() {
     { stepNumber: 4, delayDays: 7, promptOverride: '' },
     { stepNumber: 5, delayDays: 10, promptOverride: '' },
   ]);
+  const [channel, setChannel] = useState<CampaignChannel>('whatsapp');
   const [loading, setLoading] = useState(false);
 
   function updateStep(idx: number, field: keyof StepConfig, value: string | number) {
@@ -46,6 +55,7 @@ export default function NewCampaignPage() {
         name,
         description: description || null,
         basePrompt,
+        channel,
         steps: steps.map((s) => ({
           stepNumber: s.stepNumber,
           delayDays: s.delayDays,
@@ -101,6 +111,24 @@ export default function NewCampaignPage() {
                 rows={4}
                 required
               />
+            </div>
+            <div className="space-y-2">
+              <Label>Canal de envio</Label>
+              <Select value={channel} onValueChange={(v) => setChannel(v as CampaignChannel)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="whatsapp">WhatsApp</SelectItem>
+                  <SelectItem value="email">E-mail</SelectItem>
+                  <SelectItem value="both">Ambos (WhatsApp + E-mail)</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                {channel === 'whatsapp' && 'Mensagens enviadas apenas por WhatsApp.'}
+                {channel === 'email' && 'Mensagens enviadas apenas por e-mail. Corretores sem e-mail serão ignorados.'}
+                {channel === 'both' && 'Mensagens enviadas por WhatsApp e e-mail. Corretores sem e-mail recebem apenas WhatsApp.'}
+              </p>
             </div>
           </CardContent>
         </Card>

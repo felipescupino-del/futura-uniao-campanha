@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { generateCampaignMessage } from '@/lib/openai';
 import { sendWhatsAppMessage } from '@/lib/zapi';
+import { sendCampaignEmail } from '@/lib/email';
 
 const BATCH_SIZE = 20;
 const DELAY_BETWEEN_SENDS_MS = 4000; // ~5 msgs/min, within Z-API limits
@@ -56,6 +57,17 @@ export async function POST(req: NextRequest) {
       continue;
     }
 
+    const channel = entry.campaign.channel as 'whatsapp' | 'email' | 'both';
+    const shouldWhatsApp = channel === 'whatsapp' || channel === 'both';
+    const shouldEmail = (channel === 'email' || channel === 'both') && !!entry.broker.email;
+
+    // Skip broker entirely if email-only and no email
+    if (channel === 'email' && !entry.broker.email) {
+      console.log(`[cron] Skipping broker ${entry.broker.name} (no email) for email-only campaign`);
+      processed++;
+      continue;
+    }
+
     try {
       // If step has a fixed message (promptOverride), send it directly.
       // Only use AI generation when there's no override.
@@ -75,8 +87,38 @@ export async function POST(req: NextRequest) {
         });
       }
 
-      // Send via Z-API
-      await sendWhatsAppMessage(entry.broker.phone, message);
+      // Send via WhatsApp
+      if (shouldWhatsApp) {
+        await sendWhatsAppMessage(entry.broker.phone, message);
+        await prisma.messageLog.create({
+          data: {
+            campaignBrokerId: entry.id,
+            stepNumber: nextStep,
+            content: message,
+            channel: 'whatsapp',
+            status: 'sent',
+          },
+        });
+      }
+
+      // Send via Email
+      if (shouldEmail) {
+        const subject = `${entry.campaign.name} — Etapa ${nextStep}`;
+        const result = await sendCampaignEmail({
+          to: entry.broker.email!,
+          subject,
+          text: message,
+        });
+        await prisma.messageLog.create({
+          data: {
+            campaignBrokerId: entry.id,
+            stepNumber: nextStep,
+            content: message,
+            channel: 'email',
+            status: result.success ? 'sent' : 'failed',
+          },
+        });
+      }
 
       // Calculate next message time
       const nextStepConfig = entry.campaign.steps.find((s) => s.stepNumber === nextStep + 1);
@@ -95,15 +137,6 @@ export async function POST(req: NextRequest) {
         },
       });
 
-      await prisma.messageLog.create({
-        data: {
-          campaignBrokerId: entry.id,
-          stepNumber: nextStep,
-          content: message,
-          status: 'sent',
-        },
-      });
-
       // Mark unresponsive if this was the last step
       if (!nextMessageAt) {
         await prisma.broker.update({
@@ -114,8 +147,8 @@ export async function POST(req: NextRequest) {
 
       processed++;
 
-      // Delay between sends
-      if (processed < entries.length) {
+      // Delay between sends (only needed when WhatsApp is involved)
+      if (shouldWhatsApp && processed < entries.length) {
         await sleep(DELAY_BETWEEN_SENDS_MS);
       }
     } catch (err) {

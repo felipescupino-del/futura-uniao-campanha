@@ -46,6 +46,7 @@ model Campaign {
   status      String   @default("draft") @map("status") // draft | active | paused | completed
   totalSteps  Int      @default(5) @map("total_etapas")
   basePrompt  String   @map("prompt_base") @db.Text
+  channel     String   @default("whatsapp") @map("canal") // whatsapp | email | both
   createdAt   DateTime @default(now()) @map("criado_em")
   updatedAt   DateTime @updatedAt @map("atualizado_em")
 
@@ -95,6 +96,7 @@ model MessageLog {
   campaignBrokerId Int      @map("campanha_corretor_id")
   stepNumber       Int      @map("numero_etapa")
   content          String   @map("conteudo") @db.Text
+  channel          String   @default("whatsapp") @map("canal") // whatsapp | email
   sentAt           DateTime @default(now()) @map("enviado_em")
   status           String   @default("sent") @map("status") // sent | delivered | read | failed
 

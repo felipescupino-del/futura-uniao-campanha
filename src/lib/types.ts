@@ -28,11 +28,14 @@ export interface ActivityEvent {
   timestamp: string;
 }
 
+export type CampaignChannel = 'whatsapp' | 'email' | 'both';
+
 export interface CampaignDetail {
   id: number;
   name: string;
   description: string | null;
   status: string;
+  channel: CampaignChannel;
   totalSteps: number;
   basePrompt: string;
   createdAt: string;
@@ -65,6 +68,7 @@ export interface CampaignBrokerEntry {
     id: number;
     name: string;
     phone: string;
+    email: string | null;
   };
   messages: MessageLogEntry[];
 }
@@ -73,6 +77,7 @@ export interface MessageLogEntry {
   id: number;
   stepNumber: number;
   content: string;
+  channel: 'whatsapp' | 'email';
   sentAt: string;
   status: string;
 }

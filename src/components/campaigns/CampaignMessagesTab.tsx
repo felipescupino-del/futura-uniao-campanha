@@ -82,6 +82,9 @@ export function CampaignMessagesTab({ campaignId, brokers, onRefresh }: Campaign
                     <span className="font-medium">{msg.brokerName}</span>
                     <span className="text-muted-foreground">·</span>
                     <span className="text-muted-foreground">Etapa {msg.stepNumber}</span>
+                    <Badge variant="outline" className="text-[10px]">
+                      {msg.channel === 'email' ? 'E-mail' : 'WhatsApp'}
+                    </Badge>
                   </div>
                   <p className="mt-1 whitespace-pre-wrap text-sm text-muted-foreground">{content}</p>
                 </div>

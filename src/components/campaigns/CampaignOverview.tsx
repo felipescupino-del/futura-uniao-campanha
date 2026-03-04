@@ -11,7 +11,13 @@ import type { CampaignDetail } from '@/lib/types';
 export function CampaignOverview({ campaign }: { campaign: CampaignDetail }) {
   const [promptExpanded, setPromptExpanded] = useState(false);
 
-  const { stats, totalSteps, brokers, basePrompt, createdAt, steps } = campaign;
+  const { stats, totalSteps, brokers, basePrompt, createdAt, steps, channel } = campaign;
+
+  const channelLabels: Record<string, string> = {
+    whatsapp: 'WhatsApp',
+    email: 'E-mail',
+    both: 'WhatsApp + E-mail',
+  };
   const responsePercent = stats.total > 0 ? Math.round((stats.responded / stats.total) * 100) : 0;
 
   return (
@@ -81,6 +87,10 @@ export function CampaignOverview({ campaign }: { campaign: CampaignDetail }) {
           <div className="flex justify-between">
             <span className="text-muted-foreground">Criada em</span>
             <span>{new Date(createdAt).toLocaleDateString('pt-BR')}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">Canal</span>
+            <span>{channelLabels[channel] || channel}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-muted-foreground">Total de etapas</span>

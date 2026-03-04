@@ -7,10 +7,17 @@ interface Campaign {
   name: string;
   description: string | null;
   status: string;
+  channel?: string;
   totalSteps: number;
   createdAt: string;
   _count: { brokers: number };
 }
+
+const channelLabels: Record<string, string> = {
+  whatsapp: 'WhatsApp',
+  email: 'E-mail',
+  both: 'Ambos',
+};
 
 const statusLabels: Record<string, string> = {
   draft: 'Rascunho',
@@ -45,6 +52,9 @@ export function CampaignCard({ campaign }: { campaign: Campaign }) {
           <div className="flex gap-4 text-xs text-muted-foreground">
             <span>{campaign.totalSteps} etapas</span>
             <span>{campaign._count.brokers} corretores</span>
+            {campaign.channel && (
+              <span>{channelLabels[campaign.channel] || campaign.channel}</span>
+            )}
             <span>{new Date(campaign.createdAt).toLocaleDateString('pt-BR')}</span>
           </div>
         </CardContent>

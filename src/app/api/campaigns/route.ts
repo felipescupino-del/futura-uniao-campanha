@@ -21,6 +21,7 @@ export async function POST(req: NextRequest) {
       name: body.name,
       description: body.description || null,
       basePrompt: body.basePrompt,
+      channel: body.channel || 'whatsapp',
       totalSteps: body.steps?.length || 5,
       steps: {
         create: (body.steps || []).map((s: { stepNumber: number; delayDays: number; promptOverride?: string }) => ({

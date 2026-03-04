@@ -120,6 +120,7 @@ export function CampaignBrokersTab({ campaignId, totalSteps, brokers, onRefresh 
               <TableHead className="w-8" />
               <TableHead>Nome</TableHead>
               <TableHead>Telefone</TableHead>
+              <TableHead>E-mail</TableHead>
               <TableHead>Etapa</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Última msg</TableHead>
@@ -147,6 +148,7 @@ export function CampaignBrokersTab({ campaignId, totalSteps, brokers, onRefresh 
                       </TableCell>
                       <TableCell className="font-medium">{entry.broker.name}</TableCell>
                       <TableCell>{entry.broker.phone}</TableCell>
+                      <TableCell className="text-muted-foreground">{entry.broker.email || '-'}</TableCell>
                       <TableCell>
                         {entry.currentStep}/{totalSteps}
                       </TableCell>
@@ -202,7 +204,7 @@ export function CampaignBrokersTab({ campaignId, totalSteps, brokers, onRefresh 
                   </CollapsibleTrigger>
                   <CollapsibleContent asChild>
                     <tr>
-                      <td colSpan={7} className="bg-muted/30 px-6 py-3">
+                      <td colSpan={8} className="bg-muted/30 px-6 py-3">
                         <BrokerMessageHistory
                           messages={entry.messages}
                           onRetry={handleRetry}
