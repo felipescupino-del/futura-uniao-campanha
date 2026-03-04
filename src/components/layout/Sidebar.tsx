@@ -19,7 +19,7 @@ export function Sidebar({ className }: { className?: string }) {
   return (
     <aside className={cn('flex w-64 flex-col border-r bg-card', className)}>
       <div className="flex items-center gap-3 border-b px-5 py-4">
-        <Image src="/logo.jpeg" alt="Grupo Futura União" width={40} height={40} className="shrink-0 rounded" />
+        <Image src="/logo.png" alt="Grupo Futura União" width={40} height={40} className="shrink-0" />
         <div>
           <h1 className="text-sm font-bold leading-tight">Campanhas</h1>
           <p className="text-[11px] text-muted-foreground">Grupo Futura União</p>
