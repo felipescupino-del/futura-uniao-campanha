@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -23,6 +23,12 @@ interface StepConfig {
   promptOverride: string;
 }
 
+interface BrokerListSummary {
+  id: number;
+  name: string;
+  _count: { brokers: number };
+}
+
 export default function NewCampaignPage() {
   const router = useRouter();
   const [name, setName] = useState('');
@@ -39,6 +45,14 @@ export default function NewCampaignPage() {
   ]);
   const [channel, setChannel] = useState<CampaignChannel>('whatsapp');
   const [loading, setLoading] = useState(false);
+  const [lists, setLists] = useState<BrokerListSummary[]>([]);
+  const [selectedListId, setSelectedListId] = useState<string>('');
+
+  useEffect(() => {
+    fetch('/api/lists')
+      .then((r) => r.json())
+      .then((data) => setLists(Array.isArray(data) ? data : []));
+  }, []);
 
   function updateStep(idx: number, field: keyof StepConfig, value: string | number) {
     setSteps((prev) => prev.map((s, i) => (i === idx ? { ...s, [field]: value } : s)));
@@ -67,7 +81,8 @@ export default function NewCampaignPage() {
     if (res.ok) {
       const campaign = await res.json();
       toast.success('Campanha criada com sucesso!');
-      router.push(`/campaigns/${campaign.id}`);
+      const listParam = selectedListId ? `?listId=${selectedListId}` : '';
+      router.push(`/campaigns/${campaign.id}${listParam}`);
     } else {
       toast.error('Erro ao criar campanha');
       setLoading(false);
@@ -130,6 +145,27 @@ export default function NewCampaignPage() {
                 {channel === 'both' && 'Mensagens enviadas por WhatsApp e e-mail. Corretores sem e-mail recebem apenas WhatsApp.'}
               </p>
             </div>
+            {lists.length > 0 && (
+              <div className="space-y-2">
+                <Label>Lista de corretores</Label>
+                <Select value={selectedListId} onValueChange={setSelectedListId}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecionar lista (opcional)" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Nenhuma (selecionar depois)</SelectItem>
+                    {lists.map((list) => (
+                      <SelectItem key={list.id} value={String(list.id)}>
+                        {list.name} ({list._count.brokers} corretores)
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  Ao ativar a campanha, os corretores desta lista serão pré-selecionados.
+                </p>
+              </div>
+            )}
           </CardContent>
         </Card>
 

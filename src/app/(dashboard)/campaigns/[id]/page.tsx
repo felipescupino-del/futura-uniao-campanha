@@ -24,7 +24,7 @@ import { CampaignOverview } from '@/components/campaigns/CampaignOverview';
 import { CampaignBrokersTab } from '@/components/campaigns/CampaignBrokersTab';
 import { CampaignMessagesTab } from '@/components/campaigns/CampaignMessagesTab';
 import { MessagePreviewDialog } from '@/components/campaigns/MessagePreviewDialog';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Trash2 } from 'lucide-react';
 import type { CampaignDetail } from '@/lib/types';
 
@@ -57,6 +57,8 @@ const statusVariant: Record<string, 'default' | 'secondary' | 'destructive' | 'o
 export default function CampaignDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const preselectedListId = searchParams.get('listId');
   const [campaign, setCampaign] = useState<CampaignDetail | null>(null);
   const [activating, setActivating] = useState(false);
   const [brokerSelectOpen, setBrokerSelectOpen] = useState(false);
@@ -98,9 +100,11 @@ export default function CampaignDetailPage({ params }: { params: Promise<{ id: s
   }
 
   function openBrokerSelect() {
-    setFilterListId('all');
+    const initialListId = preselectedListId || 'all';
+    setFilterListId(initialListId);
+    const brokerParams = initialListId !== 'all' ? `?listId=${initialListId}` : '';
     Promise.all([
-      fetch('/api/brokers').then((r) => r.json()),
+      fetch(`/api/brokers${brokerParams}`).then((r) => r.json()),
       fetch('/api/lists').then((r) => r.json()),
     ]).then(([brokers, lists]: [Broker[], BrokerListSummary[]]) => {
       setAvailableBrokers(brokers);
