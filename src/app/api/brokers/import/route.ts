@@ -41,6 +41,8 @@ export async function POST(req: NextRequest) {
     const raw = row as unknown as Record<string, string>;
     const phone = (raw.telefone || raw.phone || raw.cel || raw.celular)?.replace(/\D/g, '');
     const name = (raw.nome || raw.corretora || raw.name || raw.empresa)?.trim();
+    const email = (raw.email || raw['e-mail'] || raw.mail)?.trim() || null;
+    const cnpj = (raw.cnpj || raw['cnpj/cpf'] || raw.documento)?.trim() || null;
 
     if (!phone || !name) {
       skipped++;
@@ -53,14 +55,14 @@ export async function POST(req: NextRequest) {
         where: { phone },
         update: {
           name,
-          cnpj: row.cnpj?.trim() || undefined,
-          email: row.email?.trim() || undefined,
+          cnpj: cnpj || undefined,
+          email: email || undefined,
         },
         create: {
           name,
           phone,
-          cnpj: row.cnpj?.trim() || null,
-          email: row.email?.trim() || null,
+          cnpj,
+          email,
         },
       });
 

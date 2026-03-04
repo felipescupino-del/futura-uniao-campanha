@@ -30,6 +30,15 @@ export async function GET(
   return NextResponse.json({ ...campaign, stats });
 }
 
+export async function DELETE(
+  _req: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  const { id } = await params;
+  await prisma.campaign.delete({ where: { id: Number(id) } });
+  return NextResponse.json({ deleted: true });
+}
+
 export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> },

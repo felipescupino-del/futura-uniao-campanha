@@ -24,6 +24,8 @@ import { CampaignOverview } from '@/components/campaigns/CampaignOverview';
 import { CampaignBrokersTab } from '@/components/campaigns/CampaignBrokersTab';
 import { CampaignMessagesTab } from '@/components/campaigns/CampaignMessagesTab';
 import { MessagePreviewDialog } from '@/components/campaigns/MessagePreviewDialog';
+import { useRouter } from 'next/navigation';
+import { Trash2 } from 'lucide-react';
 import type { CampaignDetail } from '@/lib/types';
 
 interface Broker {
@@ -54,6 +56,7 @@ const statusVariant: Record<string, 'default' | 'secondary' | 'destructive' | 'o
 
 export default function CampaignDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
+  const router = useRouter();
   const [campaign, setCampaign] = useState<CampaignDetail | null>(null);
   const [activating, setActivating] = useState(false);
   const [brokerSelectOpen, setBrokerSelectOpen] = useState(false);
@@ -225,6 +228,19 @@ export default function CampaignDetailPage({ params }: { params: Promise<{ id: s
               Pausar
             </Button>
           )}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="text-destructive hover:text-destructive"
+            onClick={async () => {
+              if (!confirm(`Excluir a campanha "${campaign.name}"? Esta ação não pode ser desfeita.`)) return;
+              await fetch(`/api/campaigns/${id}`, { method: 'DELETE' });
+              toast.success('Campanha excluída');
+              router.push('/campaigns');
+            }}
+          >
+            <Trash2 className="size-4" />
+          </Button>
         </div>
       </div>
 
