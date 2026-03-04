@@ -12,6 +12,13 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { CampaignDetailSkeleton } from '@/components/campaigns/CampaignDetailSkeleton';
 import { CampaignOverview } from '@/components/campaigns/CampaignOverview';
 import { CampaignBrokersTab } from '@/components/campaigns/CampaignBrokersTab';
@@ -23,6 +30,12 @@ interface Broker {
   id: number;
   name: string;
   phone: string;
+}
+
+interface BrokerListSummary {
+  id: number;
+  name: string;
+  _count: { brokers: number };
 }
 
 const campaignStatusLabels: Record<string, string> = {
@@ -46,6 +59,8 @@ export default function CampaignDetailPage({ params }: { params: Promise<{ id: s
   const [brokerSelectOpen, setBrokerSelectOpen] = useState(false);
   const [availableBrokers, setAvailableBrokers] = useState<Broker[]>([]);
   const [selectedBrokerIds, setSelectedBrokerIds] = useState<Set<number>>(new Set());
+  const [brokerLists, setBrokerLists] = useState<BrokerListSummary[]>([]);
+  const [filterListId, setFilterListId] = useState<string>('all');
 
   const load = useCallback(() => {
     fetch(`/api/campaigns/${id}`)
@@ -80,12 +95,26 @@ export default function CampaignDetailPage({ params }: { params: Promise<{ id: s
   }
 
   function openBrokerSelect() {
-    fetch('/api/brokers')
+    setFilterListId('all');
+    Promise.all([
+      fetch('/api/brokers').then((r) => r.json()),
+      fetch('/api/lists').then((r) => r.json()),
+    ]).then(([brokers, lists]: [Broker[], BrokerListSummary[]]) => {
+      setAvailableBrokers(brokers);
+      setSelectedBrokerIds(new Set(brokers.map((b) => b.id)));
+      setBrokerLists(Array.isArray(lists) ? lists : []);
+      setBrokerSelectOpen(true);
+    });
+  }
+
+  function handleListFilter(listId: string) {
+    setFilterListId(listId);
+    const params = listId !== 'all' ? `?listId=${listId}` : '';
+    fetch(`/api/brokers${params}`)
       .then((r) => r.json())
       .then((brokers: Broker[]) => {
         setAvailableBrokers(brokers);
         setSelectedBrokerIds(new Set(brokers.map((b) => b.id)));
-        setBrokerSelectOpen(true);
       });
   }
 
@@ -129,6 +158,23 @@ export default function CampaignDetailPage({ params }: { params: Promise<{ id: s
                   <DialogTitle>Selecionar Corretores</DialogTitle>
                 </DialogHeader>
                 <div className="space-y-2">
+                  {brokerLists.length > 0 && (
+                    <div className="mb-2">
+                      <Select value={filterListId} onValueChange={handleListFilter}>
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Filtrar por lista" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">Todas as listas</SelectItem>
+                          {brokerLists.map((list) => (
+                            <SelectItem key={list.id} value={String(list.id)}>
+                              {list.name} ({list._count.brokers})
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
                   <div className="mb-2 flex justify-between text-sm text-muted-foreground">
                     <span>{selectedBrokerIds.size} selecionados</span>
                     <Button

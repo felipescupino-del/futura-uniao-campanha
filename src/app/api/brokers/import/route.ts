@@ -12,7 +12,10 @@ interface CsvRow {
 export async function POST(req: NextRequest) {
   const formData = await req.formData();
   const file = formData.get('file') as File | null;
+  const listName = (formData.get('listName') as string)?.trim();
+
   if (!file) return NextResponse.json({ error: 'No file provided' }, { status: 400 });
+  if (!listName) return NextResponse.json({ error: 'listName is required' }, { status: 400 });
 
   const text = await file.text();
   const { data, errors } = Papa.parse<CsvRow>(text, {
@@ -24,6 +27,11 @@ export async function POST(req: NextRequest) {
   if (errors.length > 0) {
     return NextResponse.json({ error: 'CSV parse error', details: errors }, { status: 400 });
   }
+
+  // Create the broker list
+  const brokerList = await prisma.brokerList.create({
+    data: { name: listName },
+  });
 
   let imported = 0;
   let skipped = 0;
@@ -41,7 +49,7 @@ export async function POST(req: NextRequest) {
     }
 
     try {
-      await prisma.broker.upsert({
+      const broker = await prisma.broker.upsert({
         where: { phone },
         update: {
           name,
@@ -55,6 +63,14 @@ export async function POST(req: NextRequest) {
           email: row.email?.trim() || null,
         },
       });
+
+      // Link broker to the list (ignore if already linked)
+      await prisma.brokerListBroker.create({
+        data: { listId: brokerList.id, brokerId: broker.id },
+      }).catch(() => {
+        // unique constraint — broker already in this list
+      });
+
       imported++;
     } catch {
       skipped++;
@@ -62,5 +78,5 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  return NextResponse.json({ imported, skipped, issues });
+  return NextResponse.json({ imported, skipped, issues, listId: brokerList.id, listName });
 }

@@ -10,6 +10,10 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 
+interface BrokerList {
+  list: { id: number; name: string };
+}
+
 interface Broker {
   id: number;
   name: string;
@@ -18,6 +22,7 @@ interface Broker {
   email: string | null;
   status: string;
   importedAt: string;
+  lists?: BrokerList[];
 }
 
 const statusLabels: Record<string, string> = {
@@ -41,6 +46,7 @@ export function BrokerTable({ brokers }: { brokers: Broker[] }) {
           <TableHead>Telefone</TableHead>
           <TableHead>CNPJ</TableHead>
           <TableHead>Email</TableHead>
+          <TableHead>Listas</TableHead>
           <TableHead>Status</TableHead>
           <TableHead>Importado em</TableHead>
         </TableRow>
@@ -53,6 +59,17 @@ export function BrokerTable({ brokers }: { brokers: Broker[] }) {
             <TableCell>{broker.cnpj || '-'}</TableCell>
             <TableCell>{broker.email || '-'}</TableCell>
             <TableCell>
+              <div className="flex flex-wrap gap-1">
+                {broker.lists && broker.lists.length > 0
+                  ? broker.lists.map((bl) => (
+                      <Badge key={bl.list.id} variant="outline" className="text-xs">
+                        {bl.list.name}
+                      </Badge>
+                    ))
+                  : <span className="text-muted-foreground">-</span>}
+              </div>
+            </TableCell>
+            <TableCell>
               <Badge variant={statusVariants[broker.status] || 'secondary'}>
                 {statusLabels[broker.status] || broker.status}
               </Badge>
@@ -64,7 +81,7 @@ export function BrokerTable({ brokers }: { brokers: Broker[] }) {
         ))}
         {brokers.length === 0 && (
           <TableRow>
-            <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+            <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
               Nenhum corretor importado
             </TableCell>
           </TableRow>

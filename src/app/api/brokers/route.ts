@@ -5,6 +5,7 @@ export async function GET(req: NextRequest) {
   const { searchParams } = req.nextUrl;
   const status = searchParams.get('status');
   const search = searchParams.get('search');
+  const listId = searchParams.get('listId');
 
   const brokers = await prisma.broker.findMany({
     where: {
@@ -16,6 +17,14 @@ export async function GET(req: NextRequest) {
           { cnpj: { contains: search } },
         ],
       }),
+      ...(listId && {
+        lists: { some: { listId: parseInt(listId, 10) } },
+      }),
+    },
+    include: {
+      lists: {
+        include: { list: { select: { id: true, name: true } } },
+      },
     },
     orderBy: { importedAt: 'desc' },
   });

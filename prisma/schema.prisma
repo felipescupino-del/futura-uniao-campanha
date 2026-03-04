@@ -34,8 +34,35 @@ model Broker {
   updatedAt  DateTime @updatedAt @map("atualizado_em")
 
   campaigns CampaignBroker[]
+  lists     BrokerListBroker[]
 
   @@map("corretores_inativos")
+}
+
+// ─── BrokerList ─────────────────────────────────────────────────────────
+model BrokerList {
+  id          Int      @id @default(autoincrement())
+  name        String   @map("nome")
+  description String?  @map("descricao")
+  createdAt   DateTime @default(now()) @map("criado_em")
+
+  brokers BrokerListBroker[]
+
+  @@map("listas_corretores")
+}
+
+// ─── BrokerListBroker ───────────────────────────────────────────────────
+model BrokerListBroker {
+  id       Int      @id @default(autoincrement())
+  listId   Int      @map("lista_id")
+  brokerId Int      @map("corretor_id")
+  addedAt  DateTime @default(now()) @map("adicionado_em")
+
+  list   BrokerList @relation(fields: [listId], references: [id], onDelete: Cascade)
+  broker Broker     @relation(fields: [brokerId], references: [id], onDelete: Cascade)
+
+  @@unique([listId, brokerId])
+  @@map("lista_corretor")
 }
 
 // ─── Campaign ─────────────────────────────────────────────────────────────
