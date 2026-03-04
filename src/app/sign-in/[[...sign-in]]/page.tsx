@@ -22,8 +22,8 @@ export default function SignInPage() {
             <Image
               src="/logo.png"
               alt="Grupo Futura União"
-              width={120}
-              height={120}
+              width={200}
+              height={200}
               className="drop-shadow-2xl"
               priority
             />
@@ -44,6 +44,14 @@ export default function SignInPage() {
       {/* Right — Clerk Sign-In form */}
       <div className="flex flex-[2] items-center justify-center bg-background p-8">
         <div className="animate-fade-in w-full max-w-md">
+          <div className="mb-6 flex justify-center lg:hidden">
+            <Image
+              src="/logo.png"
+              alt="Grupo Futura União"
+              width={80}
+              height={80}
+            />
+          </div>
           <SignIn
             appearance={{
               elements: {
