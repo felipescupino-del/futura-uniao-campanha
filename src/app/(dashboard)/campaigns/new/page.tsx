@@ -81,33 +81,39 @@ export default function NewCampaignPage() {
     e.preventDefault();
     setLoading(true);
 
-    const formData = new FormData();
-    formData.append('name', name);
-    formData.append('description', description || '');
-    formData.append('basePrompt', basePrompt);
-    formData.append('channel', channel);
-    formData.append('steps', JSON.stringify(steps.map((s) => ({
-      stepNumber: s.stepNumber,
-      delayDays: s.delayDays,
-      promptOverride: s.promptOverride || null,
-    }))));
-    if (mediaFile) {
-      formData.append('image', mediaFile);
-      formData.append('mediaType', mediaType || 'image');
-    }
+    try {
+      const formData = new FormData();
+      formData.append('name', name);
+      formData.append('description', description || '');
+      formData.append('basePrompt', basePrompt);
+      formData.append('channel', channel);
+      formData.append('steps', JSON.stringify(steps.map((s) => ({
+        stepNumber: s.stepNumber,
+        delayDays: s.delayDays,
+        promptOverride: s.promptOverride || null,
+      }))));
+      if (mediaFile) {
+        formData.append('image', mediaFile);
+        formData.append('mediaType', mediaType || 'image');
+      }
 
-    const res = await fetch('/api/campaigns', {
-      method: 'POST',
-      body: formData,
-    });
+      const res = await fetch('/api/campaigns', {
+        method: 'POST',
+        body: formData,
+      });
 
-    if (res.ok) {
-      const campaign = await res.json();
-      toast.success('Campanha criada com sucesso!');
-      const listParam = selectedListId ? `?listId=${selectedListId}` : '';
-      router.push(`/campaigns/${campaign.id}${listParam}`);
-    } else {
-      toast.error('Erro ao criar campanha');
+      if (res.ok) {
+        const campaign = await res.json();
+        toast.success('Campanha criada com sucesso!');
+        const listParam = selectedListId ? `?listId=${selectedListId}` : '';
+        router.push(`/campaigns/${campaign.id}${listParam}`);
+      } else {
+        const err = await res.json().catch(() => null);
+        toast.error(err?.error || 'Erro ao criar campanha');
+      }
+    } catch {
+      toast.error('Erro de conexão — tente novamente');
+    } finally {
       setLoading(false);
     }
   }
