@@ -25,45 +25,54 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true, ignored: true });
   }
 
-  // Forward to issy-assistant in parallel (fire-and-forget, never blocks)
-  forwardToIssyAssistant(body);
-
   // --- Campaign-platform processing below ---
 
   // Validate instanceId matches our instance
   if (body.instanceId && body.instanceId !== process.env.ZAPI_INSTANCE_ID) {
+    forwardToIssyAssistant(body);
     return NextResponse.json({ ok: true, ignored: true });
   }
 
   // Ignore messages sent by us
   if (body.fromMe === true) {
+    forwardToIssyAssistant(body);
     return NextResponse.json({ ok: true, ignored: true });
   }
 
   // Ignore group messages
   if (body.isGroup === true || (typeof body.chatId === 'string' && body.chatId.includes('@g.us'))) {
+    forwardToIssyAssistant(body);
     return NextResponse.json({ ok: true, ignored: true });
   }
 
-  // Extract phone number — Z-API sends it in `phone` or in `chatId` (e.g. "5511999999999@c.us")
+  // Extract phone number
   let phone = body.phone as string | undefined;
   if (!phone && typeof body.chatId === 'string') {
     phone = body.chatId.replace('@c.us', '');
   }
 
   if (!phone) {
+    forwardToIssyAssistant(body);
     return NextResponse.json({ ok: true, ignored: true });
   }
 
+  // Check if sender is a broker — if so, process recovery and do NOT forward to issy-assistant
   try {
     const result = await markBrokerAsRecovered(phone);
 
-    if (result.recovered) {
-      await notifyAdminOfRecovery(result.brokerName!, phone, result.campaignNames!);
+    if (result.isBroker) {
+      // Broker = human service, do NOT send to chatbot
+      if (result.recovered) {
+        await notifyAdminOfRecovery(result.brokerName!, phone, result.campaignNames!);
+      }
+      return NextResponse.json({ ok: true, broker: true });
     }
   } catch (err) {
     console.error('[zapi-incoming] Error processing reply:', err);
   }
+
+  // Not a broker — forward to issy-assistant chatbot
+  forwardToIssyAssistant(body);
 
   // Always 200 — Z-API retries on non-2xx
   return NextResponse.json({ ok: true });

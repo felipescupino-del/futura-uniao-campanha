@@ -3,6 +3,7 @@ import { sendWhatsAppMessage } from '@/lib/zapi';
 
 interface RecoveryResult {
   recovered: boolean;
+  isBroker: boolean;
   brokerName?: string;
   campaignNames?: string[];
 }
@@ -22,11 +23,11 @@ export async function markBrokerAsRecovered(phone: string): Promise<RecoveryResu
     },
   });
 
-  if (!broker) return { recovered: false };
+  if (!broker) return { recovered: false, isBroker: false };
 
   // Already recovered — idempotent, no-op
   if (broker.status === 'recovered' && broker.campaigns.length === 0) {
-    return { recovered: false };
+    return { recovered: false, isBroker: true };
   }
 
   const campaignNames = broker.campaigns.map((cb) => cb.campaign.name);
@@ -50,7 +51,7 @@ export async function markBrokerAsRecovered(phone: string): Promise<RecoveryResu
     },
   });
 
-  return { recovered: true, brokerName: broker.name, campaignNames };
+  return { recovered: true, isBroker: true, brokerName: broker.name, campaignNames };
 }
 
 /**
