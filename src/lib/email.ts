@@ -39,7 +39,7 @@ function textToHtml(text: string, imageUrl?: string | null): string {
   ${imageBlock}
   ${paragraphs}
   <hr style="border:none;border-top:1px solid #e5e5e5;margin:32px 0 16px">
-  <p style="font-size:12px;color:#888;margin:0">Grupo Futura União — Assessoria de Seguros</p>
+  <p style="font-size:12px;color:#888;margin:0">Issy Tecnologia</p>
 </body>
 </html>`.trim();
 }
@@ -55,12 +55,12 @@ export async function sendCampaignEmail({
   text: string;
   imageUrl?: string | null;
 }): Promise<{ success: boolean; error?: string }> {
-  const fromEmail = process.env.RESEND_FROM_EMAIL || 'contato@grupofuturauniao.com.br';
+  const fromEmail = process.env.RESEND_FROM_EMAIL || 'felipescupino@issyseg.com.br';
 
   try {
     const resend = getResend();
     const { error } = await resend.emails.send({
-      from: `Grupo Futura União <${fromEmail}>`,
+      from: `Issy Tecnologia <${fromEmail}>`,
       to,
       subject,
       html: textToHtml(text, imageUrl),

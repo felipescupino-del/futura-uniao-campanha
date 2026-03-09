@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { markBrokerAsRecovered, notifyAdminOfRecovery } from '@/lib/broker-recovery';
 
 export async function POST(req: NextRequest) {
-  // Verify webhook secret
+  // Verify webhook secret (existing auth mechanism)
   const authHeader = req.headers.get('authorization');
   if (authHeader !== `Bearer ${process.env.WEBHOOK_SECRET}`) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -11,28 +11,11 @@ export async function POST(req: NextRequest) {
   const { phone } = await req.json();
   if (!phone) return NextResponse.json({ error: 'Missing phone' }, { status: 400 });
 
-  // Find active campaign entries for this broker
-  const broker = await prisma.broker.findUnique({ where: { phone } });
-  if (!broker) return NextResponse.json({ found: false });
+  const result = await markBrokerAsRecovered(phone);
 
-  // Mark broker as recovered
-  await prisma.broker.update({
-    where: { id: broker.id },
-    data: { status: 'recovered' },
-  });
+  if (result.recovered) {
+    await notifyAdminOfRecovery(result.brokerName!, phone, result.campaignNames!);
+  }
 
-  // Mark all active campaign entries as responded, stop follow-ups
-  const updated = await prisma.campaignBroker.updateMany({
-    where: {
-      brokerId: broker.id,
-      status: { in: ['pending', 'in_progress'] },
-    },
-    data: {
-      status: 'responded',
-      respondedAt: new Date(),
-      nextMessageAt: null,
-    },
-  });
-
-  return NextResponse.json({ found: true, updated: updated.count });
+  return NextResponse.json({ found: result.recovered, recovered: result.recovered });
 }
