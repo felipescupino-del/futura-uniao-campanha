@@ -15,46 +15,54 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-  const formData = await req.formData();
+  try {
+    const formData = await req.formData();
 
-  const name = formData.get('name') as string;
-  const description = (formData.get('description') as string) || null;
-  const basePrompt = formData.get('basePrompt') as string;
-  const channel = (formData.get('channel') as string) || 'whatsapp';
-  const stepsJson = formData.get('steps') as string;
-  const imageFile = formData.get('image') as File | null;
-  const mediaType = (formData.get('mediaType') as string) || null;
+    const name = formData.get('name') as string;
+    const description = (formData.get('description') as string) || null;
+    const basePrompt = formData.get('basePrompt') as string;
+    const channel = (formData.get('channel') as string) || 'whatsapp';
+    const stepsJson = formData.get('steps') as string;
+    const imageFile = formData.get('image') as File | null;
+    const mediaType = (formData.get('mediaType') as string) || null;
 
-  const steps = JSON.parse(stepsJson || '[]') as {
-    stepNumber: number;
-    delayDays: number;
-    promptOverride?: string;
-  }[];
+    const steps = JSON.parse(stepsJson || '[]') as {
+      stepNumber: number;
+      delayDays: number;
+      promptOverride?: string;
+    }[];
 
-  let imageUrl: string | null = null;
-  if (imageFile && imageFile.size > 0) {
-    imageUrl = await uploadCampaignMedia(imageFile);
-  }
+    let imageUrl: string | null = null;
+    if (imageFile && imageFile.size > 0) {
+      imageUrl = await uploadCampaignMedia(imageFile);
+    }
 
-  const campaign = await prisma.campaign.create({
-    data: {
-      name,
-      description,
-      basePrompt,
-      channel,
-      imageUrl,
-      mediaType,
-      totalSteps: steps.length || 5,
-      steps: {
-        create: steps.map((s) => ({
-          stepNumber: s.stepNumber,
-          delayDays: s.delayDays,
-          promptOverride: s.promptOverride || null,
-        })),
+    const campaign = await prisma.campaign.create({
+      data: {
+        name,
+        description,
+        basePrompt,
+        channel,
+        imageUrl,
+        mediaType,
+        totalSteps: steps.length || 5,
+        steps: {
+          create: steps.map((s) => ({
+            stepNumber: s.stepNumber,
+            delayDays: s.delayDays,
+            promptOverride: s.promptOverride || null,
+          })),
+        },
       },
-    },
-    include: { steps: true },
-  });
+      include: { steps: true },
+    });
 
-  return NextResponse.json(campaign, { status: 201 });
+    return NextResponse.json(campaign, { status: 201 });
+  } catch (error) {
+    console.error('[campaigns POST] Error:', error);
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : 'Unknown error' },
+      { status: 500 },
+    );
+  }
 }
