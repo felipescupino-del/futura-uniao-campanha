@@ -16,6 +16,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import type { CampaignChannel } from '@/lib/types';
+import { uploadMediaFromClient } from '@/lib/supabase-client';
 
 interface StepConfig {
   stepNumber: number;
@@ -77,29 +78,38 @@ export default function NewCampaignPage() {
     }
   }
 
+  const [statusText, setStatusText] = useState('');
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
 
     try {
-      const formData = new FormData();
-      formData.append('name', name);
-      formData.append('description', description || '');
-      formData.append('basePrompt', basePrompt);
-      formData.append('channel', channel);
-      formData.append('steps', JSON.stringify(steps.map((s) => ({
-        stepNumber: s.stepNumber,
-        delayDays: s.delayDays,
-        promptOverride: s.promptOverride || null,
-      }))));
+      let mediaUrl: string | null = null;
+
       if (mediaFile) {
-        formData.append('image', mediaFile);
-        formData.append('mediaType', mediaType || 'image');
+        setStatusText('Enviando mídia...');
+        mediaUrl = await uploadMediaFromClient(mediaFile);
       }
+
+      setStatusText('Criando campanha...');
 
       const res = await fetch('/api/campaigns', {
         method: 'POST',
-        body: formData,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name,
+          description: description || null,
+          basePrompt,
+          channel,
+          mediaUrl,
+          mediaType: mediaFile ? (mediaType || 'image') : null,
+          steps: steps.map((s) => ({
+            stepNumber: s.stepNumber,
+            delayDays: s.delayDays,
+            promptOverride: s.promptOverride || null,
+          })),
+        }),
       });
 
       if (res.ok) {
@@ -111,10 +121,11 @@ export default function NewCampaignPage() {
         const err = await res.json().catch(() => null);
         toast.error(err?.error || 'Erro ao criar campanha');
       }
-    } catch {
-      toast.error('Erro de conexão — tente novamente');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Erro de conexão — tente novamente');
     } finally {
       setLoading(false);
+      setStatusText('');
     }
   }
 
@@ -270,7 +281,7 @@ export default function NewCampaignPage() {
             Cancelar
           </Button>
           <Button type="submit" disabled={loading}>
-            {loading ? 'Criando...' : 'Criar Campanha'}
+            {loading ? (statusText || 'Criando...') : 'Criar Campanha'}
           </Button>
         </div>
       </form>

@@ -1,12 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { uploadCampaignMedia } from '@/lib/supabase-storage';
-
-export const config = {
-  api: { bodyParser: { sizeLimit: '100mb' } },
-};
-
-export const maxDuration = 60;
 
 export async function GET() {
   const campaigns = await prisma.campaign.findMany({
@@ -22,34 +15,25 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
-    const formData = await req.formData();
+    const body = await req.json();
 
-    const name = formData.get('name') as string;
-    const description = (formData.get('description') as string) || null;
-    const basePrompt = formData.get('basePrompt') as string;
-    const channel = (formData.get('channel') as string) || 'whatsapp';
-    const stepsJson = formData.get('steps') as string;
-    const imageFile = formData.get('image') as File | null;
-    const mediaType = (formData.get('mediaType') as string) || null;
-
-    const steps = JSON.parse(stepsJson || '[]') as {
-      stepNumber: number;
-      delayDays: number;
-      promptOverride?: string;
-    }[];
-
-    let imageUrl: string | null = null;
-    if (imageFile && imageFile.size > 0) {
-      imageUrl = await uploadCampaignMedia(imageFile);
-    }
+    const { name, description, basePrompt, channel, mediaUrl, mediaType, steps } = body as {
+      name: string;
+      description: string | null;
+      basePrompt: string;
+      channel: string;
+      mediaUrl: string | null;
+      mediaType: string | null;
+      steps: { stepNumber: number; delayDays: number; promptOverride?: string | null }[];
+    };
 
     const campaign = await prisma.campaign.create({
       data: {
         name,
         description,
         basePrompt,
-        channel,
-        imageUrl,
+        channel: channel || 'whatsapp',
+        imageUrl: mediaUrl,
         mediaType,
         totalSteps: steps.length || 5,
         steps: {
