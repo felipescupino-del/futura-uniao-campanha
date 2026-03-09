@@ -2,6 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { uploadCampaignMedia } from '@/lib/supabase-storage';
 
+export const config = {
+  api: { bodyParser: { sizeLimit: '100mb' } },
+};
+
+export const maxDuration = 60;
+
 export async function GET() {
   const campaigns = await prisma.campaign.findMany({
     include: {
