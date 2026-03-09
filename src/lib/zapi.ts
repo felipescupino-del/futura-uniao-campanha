@@ -9,9 +9,24 @@ export async function sendWhatsAppMessage(
   phone: string,
   message: string,
   imageUrl?: string | null,
+  mediaType?: string | null,
   delayTypingSeconds = 2,
 ): Promise<void> {
-  if (imageUrl) {
+  if (imageUrl && mediaType === 'video') {
+    // Send video with caption
+    await axios.post(
+      `${BASE_URL}/send-video`,
+      {
+        phone,
+        video: imageUrl,
+        caption: message,
+      },
+      {
+        headers: { 'Client-Token': CLIENT_TOKEN },
+        timeout: 60_000,
+      },
+    );
+  } else if (imageUrl) {
     // Send image with caption
     await axios.post(
       `${BASE_URL}/send-image`,

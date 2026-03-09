@@ -11,7 +11,7 @@ function getResend(): Resend {
   return resendClient;
 }
 
-function textToHtml(text: string, imageUrl?: string | null): string {
+function textToHtml(text: string, imageUrl?: string | null, mediaType?: string | null): string {
   const escaped = text
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
@@ -28,7 +28,9 @@ function textToHtml(text: string, imageUrl?: string | null): string {
     .join('');
 
   const imageBlock = imageUrl
-    ? `<div style="margin:0 0 24px"><img src="${imageUrl}" alt="Campanha" style="max-width:100%;border-radius:8px" /></div>`
+    ? mediaType === 'video'
+      ? `<div style="margin:0 0 24px"><a href="${imageUrl}" style="display:inline-block;padding:12px 24px;background:#2563eb;color:#fff;border-radius:8px;text-decoration:none;font-weight:500">▶ Assistir vídeo</a></div>`
+      : `<div style="margin:0 0 24px"><img src="${imageUrl}" alt="Campanha" style="max-width:100%;border-radius:8px" /></div>`
     : '';
 
   return `
@@ -49,11 +51,13 @@ export async function sendCampaignEmail({
   subject,
   text,
   imageUrl,
+  mediaType,
 }: {
   to: string;
   subject: string;
   text: string;
   imageUrl?: string | null;
+  mediaType?: string | null;
 }): Promise<{ success: boolean; error?: string }> {
   const fromEmail = process.env.RESEND_FROM_EMAIL || 'felipescupino@issyseg.com.br';
 
@@ -63,7 +67,7 @@ export async function sendCampaignEmail({
       from: `Issy Tecnologia <${fromEmail}>`,
       to,
       subject,
-      html: textToHtml(text, imageUrl),
+      html: textToHtml(text, imageUrl, mediaType),
       text,
     });
 

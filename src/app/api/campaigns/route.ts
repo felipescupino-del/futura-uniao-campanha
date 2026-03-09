@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { uploadCampaignImage } from '@/lib/supabase-storage';
+import { uploadCampaignMedia } from '@/lib/supabase-storage';
 
 export async function GET() {
   const campaigns = await prisma.campaign.findMany({
@@ -23,6 +23,7 @@ export async function POST(req: NextRequest) {
   const channel = (formData.get('channel') as string) || 'whatsapp';
   const stepsJson = formData.get('steps') as string;
   const imageFile = formData.get('image') as File | null;
+  const mediaType = (formData.get('mediaType') as string) || null;
 
   const steps = JSON.parse(stepsJson || '[]') as {
     stepNumber: number;
@@ -32,7 +33,7 @@ export async function POST(req: NextRequest) {
 
   let imageUrl: string | null = null;
   if (imageFile && imageFile.size > 0) {
-    imageUrl = await uploadCampaignImage(imageFile);
+    imageUrl = await uploadCampaignMedia(imageFile);
   }
 
   const campaign = await prisma.campaign.create({
@@ -42,6 +43,7 @@ export async function POST(req: NextRequest) {
       basePrompt,
       channel,
       imageUrl,
+      mediaType,
       totalSteps: steps.length || 5,
       steps: {
         create: steps.map((s) => ({

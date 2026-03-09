@@ -7,7 +7,7 @@ const supabase = createClient(
 
 const BUCKET = 'campaign-images';
 
-export async function uploadCampaignImage(file: File): Promise<string> {
+export async function uploadCampaignMedia(file: File): Promise<string> {
   const ext = file.name.split('.').pop() || 'jpg';
   const fileName = `campaign-${Date.now()}.${ext}`;
 

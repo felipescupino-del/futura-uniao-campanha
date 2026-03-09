@@ -87,12 +87,13 @@ export async function POST(req: NextRequest) {
         });
       }
 
-      // Only send image on the first step
+      // Only send media on the first step
       const imageUrl = nextStep === 1 ? entry.campaign.imageUrl : null;
+      const mediaType = nextStep === 1 ? entry.campaign.mediaType : null;
 
       // Send via WhatsApp
       if (shouldWhatsApp) {
-        await sendWhatsAppMessage(entry.broker.phone, message, imageUrl);
+        await sendWhatsAppMessage(entry.broker.phone, message, imageUrl, mediaType);
         await prisma.messageLog.create({
           data: {
             campaignBrokerId: entry.id,
@@ -112,6 +113,7 @@ export async function POST(req: NextRequest) {
           subject,
           text: message,
           imageUrl,
+          mediaType,
         });
         await prisma.messageLog.create({
           data: {

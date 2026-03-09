@@ -47,8 +47,9 @@ export default function NewCampaignPage() {
   const [loading, setLoading] = useState(false);
   const [lists, setLists] = useState<BrokerListSummary[]>([]);
   const [selectedListId, setSelectedListId] = useState<string>('');
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [mediaFile, setMediaFile] = useState<File | null>(null);
+  const [mediaPreview, setMediaPreview] = useState<string | null>(null);
+  const [mediaType, setMediaType] = useState<'image' | 'video' | null>(null);
 
   useEffect(() => {
     fetch('/api/lists')
@@ -60,13 +61,19 @@ export default function NewCampaignPage() {
     setSteps((prev) => prev.map((s, i) => (i === idx ? { ...s, [field]: value } : s)));
   }
 
-  function handleImageSelect(e: React.ChangeEvent<HTMLInputElement>) {
+  function handleMediaSelect(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
-    if (file && file.type.startsWith('image/')) {
-      setImageFile(file);
+    if (!file) return;
+    if (file.type.startsWith('image/')) {
+      setMediaFile(file);
+      setMediaType('image');
       const reader = new FileReader();
-      reader.onload = (ev) => setImagePreview(ev.target?.result as string);
+      reader.onload = (ev) => setMediaPreview(ev.target?.result as string);
       reader.readAsDataURL(file);
+    } else if (file.type.startsWith('video/')) {
+      setMediaFile(file);
+      setMediaType('video');
+      setMediaPreview(URL.createObjectURL(file));
     }
   }
 
@@ -84,7 +91,10 @@ export default function NewCampaignPage() {
       delayDays: s.delayDays,
       promptOverride: s.promptOverride || null,
     }))));
-    if (imageFile) formData.append('image', imageFile);
+    if (mediaFile) {
+      formData.append('image', mediaFile);
+      formData.append('mediaType', mediaType || 'image');
+    }
 
     const res = await fetch('/api/campaigns', {
       method: 'POST',
@@ -184,27 +194,31 @@ export default function NewCampaignPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Imagem (opcional)</CardTitle>
+            <CardTitle>Mídia (opcional)</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="image">Imagem para enviar na 1a etapa (WhatsApp + Email)</Label>
+              <Label htmlFor="media">Imagem ou vídeo para enviar na 1a etapa (WhatsApp + Email)</Label>
               <input
-                id="image"
+                id="media"
                 type="file"
-                accept="image/*"
-                onChange={handleImageSelect}
+                accept="image/*,video/*"
+                onChange={handleMediaSelect}
                 className="block w-full text-sm file:mr-4 file:rounded file:border-0 file:bg-gray-100 file:px-4 file:py-2 file:text-sm"
               />
-              {imagePreview && (
+              {mediaPreview && (
                 <div className="relative">
-                  <img src={imagePreview} alt="Preview" className="max-h-48 rounded border" />
+                  {mediaType === 'video' ? (
+                    <video src={mediaPreview} controls className="max-h-48 rounded border" />
+                  ) : (
+                    <img src={mediaPreview} alt="Preview" className="max-h-48 rounded border" />
+                  )}
                   <Button
                     type="button"
                     variant="ghost"
                     size="sm"
                     className="absolute top-1 right-1 text-destructive"
-                    onClick={() => { setImageFile(null); setImagePreview(null); }}
+                    onClick={() => { setMediaFile(null); setMediaPreview(null); setMediaType(null); }}
                   >
                     Remover
                   </Button>
