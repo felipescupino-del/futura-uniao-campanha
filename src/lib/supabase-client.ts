@@ -6,7 +6,7 @@ const supabase = createClient(
 );
 
 const BUCKET = 'campaign-images';
-const MAX_FILE_SIZE_MB = 50;
+const MAX_FILE_SIZE_MB = 500;
 
 export async function uploadMediaFromClient(file: File): Promise<string> {
   if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
