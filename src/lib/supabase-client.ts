@@ -6,8 +6,13 @@ const supabase = createClient(
 );
 
 const BUCKET = 'campaign-images';
+const MAX_FILE_SIZE_MB = 50;
 
 export async function uploadMediaFromClient(file: File): Promise<string> {
+  if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
+    throw new Error(`Arquivo muito grande (máx ${MAX_FILE_SIZE_MB}MB). Seu arquivo tem ${(file.size / 1024 / 1024).toFixed(0)}MB.`);
+  }
+
   const ext = file.name.split('.').pop() || 'bin';
   const fileName = `campaign-${Date.now()}.${ext}`;
 
@@ -18,7 +23,7 @@ export async function uploadMediaFromClient(file: File): Promise<string> {
       upsert: true,
     });
 
-  if (error) throw new Error(`Upload failed: ${error.message}`);
+  if (error) throw new Error(`Upload falhou: ${error.message}`);
 
   const { data } = supabase.storage.from(BUCKET).getPublicUrl(fileName);
   return data.publicUrl;
